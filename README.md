@@ -1,8 +1,6 @@
 
-  # AI Urdu Call Analyzer
-
-  This is a code bundle for AI Urdu Call Analyzer. The original project is available at https://www.figma.com/design/ZTpWqQPr49WKdDmafOAMiZ/AI-Urdu-Call-Analyzer.
-
+  # AI Urdu Call Transcription App
+  
   ## Running the code
 
   Run `npm i` to install the dependencies.
