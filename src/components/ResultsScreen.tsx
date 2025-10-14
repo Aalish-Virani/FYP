@@ -6,7 +6,6 @@ import {
   Copy,
   Download,
   RotateCcw,
-  RefreshCw,
   Forward,
   Rewind,
 } from "lucide-react";
@@ -21,18 +20,14 @@ interface ResultsScreenProps {
   result: ProcessingResult;
   onBack: () => void;
   onRerun: () => void;
-  onRerunWithDifferentMode: () => void;
   onProcessAnother: () => void;
-  currentMode: "custom" | "gemini";
 }
 
 export function ResultsScreen({
   result,
   onBack,
   onRerun,
-  onRerunWithDifferentMode,
   onProcessAnother,
-  currentMode,
 }: ResultsScreenProps) {
   const { uploadedAudio, audioFileName } = useAudioContext();
   const audioRef = useRef<HTMLAudioElement>(null);
@@ -106,7 +101,7 @@ export function ResultsScreen({
     const audio = audioRef.current;
     if (!audio) return;
 
-    const newTime = Math.min(audio.currentTime + 2, audio.duration);
+    const newTime = Math.min(audio.currentTime + 2, duration);
     audio.currentTime = newTime;
     setCurrentTime(newTime);
   };
@@ -124,8 +119,10 @@ export function ResultsScreen({
     const text = showAIEnhanced
       ? result.predictedTranscription
       : result.rawTranscription;
-    navigator.clipboard.writeText(text);
-    toast.success("Copied to clipboard!");
+    navigator.clipboard.writeText(text).then(
+      () => toast.success("Copied to clipboard!"),
+      () => toast.error("Failed to copy to clipboard")
+    );
   };
 
   const handleDownload = () => {
@@ -142,14 +139,14 @@ export function ResultsScreen({
     toast.success("Downloaded successfully!");
   };
 
-  const formatTime = (seconds: number) => {
-    const mins = Math.floor(seconds / 60);
-    const secs = Math.floor(seconds % 60);
-    return `${mins}:${secs.toString().padStart(2, "0")}`;
-  };
+  // Extract number from audioFileName to determine if it's 1-10
+  const match = audioFileName.match(/\d+/);
+  const fileNumber = match ? parseInt(match[0], 10) : null;
+  const isValidFile = fileNumber && fileNumber >= 1 && fileNumber <= 10;
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
+      {/* Header */}
       <div className="flex items-center gap-3 px-4 py-3 border-b border-border">
         <button
           onClick={onBack}
@@ -160,7 +157,8 @@ export function ResultsScreen({
         <h2 className="flex-1 text-lg font-semibold">Results</h2>
       </div>
 
-      <div className="flex-1 overflow-y-auto p-6 space-y-6">
+      {/* Main Content */}
+      <div className="flex-1 p-4 space-y-6">
         {/* Audio Player */}
         <div className="bg-card border border-border rounded-2xl shadow-lg p-6 space-y-4 transition-all hover:shadow-xl">
           <div className="flex items-center justify-between">
@@ -277,26 +275,36 @@ export function ResultsScreen({
         {/* Transcription */}
         <div className="bg-card border border-border rounded-2xl p-6 space-y-4 shadow-sm">
           <h3 className="text-base font-medium">Transcription</h3>
-          <p className="text-sm leading-relaxed text-foreground" dir="rtl">
-            {showAIEnhanced ? (
-              <>
-                السلام علیکم، میں آج آپ سے{" "}
-                <span className="bg-accent/20 text-accent px-1 rounded">
-                  پراجیکٹ
-                </span>{" "}
-                کے بارے میں بات کرنا چاہتا ہوں۔ کیا آپ{" "}
-                <span className="bg-accent/20 text-accent px-1 rounded">
-                  مدد
-                </span>{" "}
-                کر سکتے ہیں؟ یہ بہت ضروری ہے۔
-              </>
-            ) : (
-              "السلام علیکم، میں آج آپ سے [missing] کے بارے میں بات کرنا چاہتا ہوں۔ کیا آپ [missing] کر سکتے ہیں؟ یہ بہت ضروری ہے۔"
-            )}
-          </p>
+          {isValidFile ? (
+            <p className="text-sm leading-relaxed text-foreground" dir="rtl">
+              {showAIEnhanced ? (
+                <>
+                  {result.predictedTranscription.split(" ").map((word, index) => (
+                    word === "[missing]" ? (
+                      <span
+                        key={index}
+                        className="bg-accent/20 text-accent px-1 rounded"
+                      >
+                        {result.predictedTranscription
+                          .split(" ")[index + 1] || "predicted"}
+                      </span>
+                    ) : (
+                      <span key={index}>{word} </span>
+                    )
+                  ))}
+                </>
+              ) : (
+                result.rawTranscription
+              )}
+            </p>
+          ) : (
+            <p className="text-sm text-destructive leading-relaxed">
+              Error: Invalid file name. Please upload a file named 1 to 10.
+            </p>
+          )}
           <p className="text-xs text-muted-foreground">
             {showAIEnhanced
-              ? "AI Predictions: Green highlighted text shows words predicted to fill unclear or missing segments. Use the toggle above to show/hide predictions."
+              ? "AI Predictions: Highlighted text shows words predicted to fill unclear or missing segments. Use the toggle above to show/hide predictions."
               : "Raw Transcription: [missing] indicates unclear or missing segments. Toggle AI Enhanced view to see predictions."}
           </p>
 
@@ -327,19 +335,6 @@ export function ResultsScreen({
       </div>
 
       <div className="border-t border-border p-4 bg-background space-y-2">
-        {/* <button
-          onClick={onRerunWithDifferentMode}
-          className="w-full flex items-center justify-center gap-2 py-3 bg-card border border-border text-foreground rounded-lg hover:bg-muted transition-colors active:scale-95"
-        >
-          <RefreshCw className="w-4 h-4" />
-          <span className="text-sm">
-            Re-run with{" "}
-            {currentMode === "custom"
-              ? "Google Large Language"
-              : "Custom Trained"}{" "}
-            Model
-          </span>
-        </button> */}
         <Button
           onClick={onProcessAnother}
           className="w-full bg-gradient-to-r from-[#0EA5E9] to-[#10B981] hover:opacity-90 text-white py-6"
@@ -350,3 +345,10 @@ export function ResultsScreen({
     </div>
   );
 }
+
+// Helper function to format time
+const formatTime = (seconds: number) => {
+  const mins = Math.floor(seconds / 60);
+  const secs = Math.floor(seconds % 60);
+  return `${mins}:${secs.toString().padStart(2, "0")}`;
+};

@@ -1,7 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { CheckCircle2, XCircle, RotateCcw, Loader2, Cpu, FileText, Sparkles, Cloud } from 'lucide-react';
 import { Progress } from './ui/progress';
+import { useAudioContext } from '../context/AudioContext';  // Import context to access uploadedAudio
+import { toast } from 'sonner@2.0.3';
+import { rawTranscripts, predictedTranscripts } from '../data/cache'; 
 
 interface ProcessingScreenProps {
   onComplete: (result: ProcessingResult) => void;
@@ -17,6 +20,8 @@ export interface ProcessingResult {
 export function ProcessingScreen({ onComplete, onCancel }: ProcessingScreenProps) {
   const [currentStep, setCurrentStep] = useState(0);
   const [progress, setProgress] = useState(0);
+  const { uploadedAudio } = useAudioContext();  // Access uploadedAudio from context
+  const audioRef = useRef<HTMLAudioElement>(null);
 
   const steps = [
     { 
@@ -39,45 +44,88 @@ export function ProcessingScreen({ onComplete, onCancel }: ProcessingScreenProps
     },
   ];
 
+  // Calculate processing duration based on audio length
+  const [audioDuration, setAudioDuration] = useState<number | null>(null);
   useEffect(() => {
-    // Simulate processing steps
-    const stepDuration = 2000;
-    
-    const stepTimer = setInterval(() => {
-      setCurrentStep((prev) => {
-        if (prev < 2) {
-          return prev + 1;
-        }
-        return prev;
-      });
-    }, stepDuration);
+    if (uploadedAudio && audioRef.current) {
+      audioRef.current.src = URL.createObjectURL(uploadedAudio);
+      audioRef.current.onloadedmetadata = () => {
+        setAudioDuration(audioRef.current?.duration || 0);
+      };
+    }
+  }, [uploadedAudio]);
 
-    const progressTimer = setInterval(() => {
-      setProgress((prev) => {
-        if (prev >= 100) {
-          clearInterval(progressTimer);
-          clearInterval(stepTimer);
-          
-          // Complete processing after a short delay
-          setTimeout(() => {
-            onComplete({
-              rawTranscription: "السلام علیکم، میں آج آپ سے [missing] کے بارے میں بات کرنا چاہتا ہوں۔ کیا آپ [missing] کر سکتے ہیں؟ یہ بہت ضروری ہے۔",
-              predictedTranscription: "السلام علیکم، میں آج آپ سے پراجیکٹ کے بارے میں بات کرنا چاہتا ہوں۔ کیا آپ مدد کر سکتے ہیں؟ یہ بہت ضروری ہے۔",
-              audioUrl: undefined
-            });
-          }, 500);
-          
-          return 100;
+  const baseDuration = 2000; // Base duration for short audio (e.g., 2 seconds)
+  const maxDuration = 10000; // Max duration for long audio (e.g., 10 seconds)
+  const processingDuration = audioDuration
+    ? Math.min(maxDuration, baseDuration + (audioDuration * 1000)) // Scale with audio duration, cap at max
+    : baseDuration;
+
+  useEffect(() => {
+    let isMounted = true;
+
+    const processTranscription = async () => {
+      try {
+        setProgress(0);
+        setCurrentStep(0);
+
+        // Step 1: Audio Analysis
+        await new Promise(resolve => setTimeout(resolve, processingDuration / 3));
+        if (!isMounted) return;
+        setCurrentStep(1);
+        setProgress(33);
+
+        // Extract number from base file name (before extension)
+        const audioFileName = uploadedAudio?.name || "";
+        const baseName = audioFileName.slice(0, audioFileName.lastIndexOf('.'));
+        const match = baseName.match(/\d+/);
+        const fileNumber = match ? parseInt(match[0], 10) : null;
+
+        let rawTranscription = "Please Try Again! Error generating transcript";
+        let predictedTranscription = "Please Try Again! Error loading transcript";
+
+        if (fileNumber && fileNumber >= 1 && fileNumber <= 12) {
+          const index = fileNumber - 1;  // Array index 0-11
+          rawTranscription = rawTranscripts[index];
+          predictedTranscription = predictedTranscripts[index];
         }
-        return prev + 2;
-      });
-    }, 100);
+
+        // Step 2: Transcription
+        await new Promise(resolve => setTimeout(resolve, processingDuration / 3));
+        if (!isMounted) return;
+        setCurrentStep(2);
+        setProgress(66);
+
+        // Step 3: AI Prediction (simulated)
+        await new Promise(resolve => setTimeout(resolve, processingDuration / 3));
+        if (!isMounted) return;
+        setProgress(100);
+
+        // Complete processing after a short delay
+        setTimeout(() => {
+          if (isMounted) {
+            onComplete({
+              rawTranscription,
+              predictedTranscription,
+              audioUrl: undefined,
+            });
+          }
+        }, 500);
+      } catch (err) {
+        if (isMounted) {
+          toast.error((err as Error).message || 'Processing failed');
+        }
+      }
+    };
+
+    if (uploadedAudio) {
+      processTranscription();
+    }
 
     return () => {
-      clearInterval(stepTimer);
-      clearInterval(progressTimer);
+      isMounted = false;
     };
-  }, [onComplete]);
+  }, [onComplete, uploadedAudio, processingDuration]);
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
@@ -90,9 +138,7 @@ export function ProcessingScreen({ onComplete, onCancel }: ProcessingScreenProps
             </div>
             <div>
               <h2 className="text-sm">Processing Audio</h2>
-              {/* <p className="text-xs text-muted-foreground">
-                Google Gemini AI Model
-              </p> */}
+              <p className="text-xs text-muted-foreground">AI Model</p>
             </div>
           </div>
           <div className="text-xs font-medium text-muted-foreground">
@@ -111,7 +157,7 @@ export function ProcessingScreen({ onComplete, onCancel }: ProcessingScreenProps
               <motion.div
                 className="absolute inset-0 w-36 h-36 -m-4 rounded-full"
                 style={{
-                  background: 'radial-gradient(circle, rgba(14, 165, 233, 0.1) 0%, transparent 70%)'
+                  background: "radial-gradient(circle, rgba(14, 165, 233, 0.1) 0%, transparent 70%)",
                 }}
                 animate={{
                   scale: [1, 1.4, 1],
@@ -123,11 +169,11 @@ export function ProcessingScreen({ onComplete, onCancel }: ProcessingScreenProps
                   ease: "easeInOut",
                 }}
               />
-              
+
               <motion.div
                 className="absolute inset-0 w-36 h-36 -m-4 rounded-full"
                 style={{
-                  background: 'radial-gradient(circle, rgba(14, 165, 233, 0.15) 0%, transparent 70%)'
+                  background: "radial-gradient(circle, rgba(14, 165, 233, 0.15) 0%, transparent 70%)",
                 }}
                 animate={{
                   scale: [1, 1.2, 1],
@@ -139,83 +185,36 @@ export function ProcessingScreen({ onComplete, onCancel }: ProcessingScreenProps
                   ease: "easeInOut",
                 }}
               />
-              
-              {/* Main Circle */}
+
+              {/* Main Circle (Stationary with Pulse Animation) */}
               <motion.div
                 className="relative w-28 h-28 rounded-full flex items-center justify-center shadow-2xl bg-gradient-to-br from-[#0EA5E9] to-[#0284c7]"
                 animate={{
-                  scale: [1, 1.05, 1],
-                  // rotate: [0, 180, 360],
+                  scale: [1, 1.1, 1], // Subtle pulse effect
+                  opacity: [1, 0.9, 1], // Slight opacity change
                 }}
                 transition={{
-                  scale: {
-                    duration: 2,
-                    repeat: Infinity,
-                    ease: "easeInOut",
-                  },
-                  rotate: {
-                    duration: 10,
-                    repeat: Infinity,
-                    ease: "linear",
-                  }
+                  duration: 1.5,
+                  repeat: Infinity,
+                  ease: "easeInOut",
                 }}
               >
-                {/* Inner Circle with Waveform */}
-                <div className="w-20 h-20 rounded-full bg-background flex items-center justify-center shadow-inner">
-                  <motion.div
-                    className="flex items-end gap-0.5 h-12"
-                    animate={{
-                      opacity: [0.5, 1, 0.5],
-                    }}
-                    transition={{
-                      duration: 1.5,
-                      repeat: Infinity,
-                      ease: "easeInOut",
-                    }}
-                  >
-                    {[...Array(7)].map((_, i) => (
-                      <motion.div
-                        key={i}
-                        className="w-1 rounded-full bg-gradient-to-t from-[#0EA5E9] to-[#0284c7]"
-                        animate={{
-                          height: ['15px', '45px', '15px'],
-                        }}
-                        transition={{
-                          duration: 1.2,
-                          repeat: Infinity,
-                          delay: i * 0.15,
-                          ease: "easeInOut",
-                        }}
-                      />
-                    ))}
-                  </motion.div>
-                </div>
-
-                {/* Percentage in center */}
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <motion.span 
-                    className="text-[10px] font-medium text-white/80"
-                    animate={{ opacity: [0, 0.5, 0] }}
-                    transition={{ duration: 2, repeat: Infinity }}
-                  >
-                    {progress}%
-                  </motion.span>
-                </div>
+                <Loader2 className="w-10 h-10 text-white" />
               </motion.div>
             </div>
           </div>
 
           {/* Current Step Info */}
-          <motion.div 
-            className="text-center space-y-2"
+          <motion.div
             key={currentStep}
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.3 }}
+            exit={{ opacity: 0, y: -10 }}
+            className="text-center space-y-1"
           >
             <div className="flex items-center justify-center gap-2">
               {React.createElement(steps[currentStep].icon, {
-                className: `w-5 h-5 ${steps[currentStep].color}`
+                className: `w-5 h-5 ${steps[currentStep].color}`,
               })}
               <h3 className="text-foreground">{steps[currentStep].label}</h3>
             </div>
@@ -271,10 +270,7 @@ export function ProcessingScreen({ onComplete, onCancel }: ProcessingScreenProps
                       </motion.div>
                     ) : index === currentStep ? (
                       // Active
-                      <motion.div
-                        key="active"
-                        className="relative"
-                      >
+                      <motion.div key="active" className="relative">
                         <motion.div
                           className="absolute inset-0 bg-secondary rounded-full -m-1"
                           animate={{
@@ -286,15 +282,23 @@ export function ProcessingScreen({ onComplete, onCancel }: ProcessingScreenProps
                             repeat: Infinity,
                           }}
                         />
-                        <motion.div 
+                        <motion.div
                           className="relative bg-secondary rounded-full p-2 shadow-lg"
-                          animate={{ 
+                          animate={{
                             rotate: 360,
-                            scale: [1, 1.1, 1]
+                            scale: [1, 1.1, 1],
                           }}
-                          transition={{ 
-                            rotate: { duration: 2, repeat: Infinity, ease: "linear" },
-                            scale: { duration: 1, repeat: Infinity, ease: "easeInOut" }
+                          transition={{
+                            rotate: {
+                              duration: 2,
+                              repeat: Infinity,
+                              ease: "linear",
+                            },
+                            scale: {
+                              duration: 1,
+                              repeat: Infinity,
+                              ease: "easeInOut",
+                            },
                           }}
                         >
                           <Loader2 className="w-5 h-5 text-white" />
@@ -339,6 +343,7 @@ export function ProcessingScreen({ onComplete, onCancel }: ProcessingScreenProps
           </div>
         </div>
       </div>
+      <audio ref={audioRef} style={{ display: 'none' }} /> {/* Hidden audio element for duration */}
     </div>
   );
 }
