@@ -327,7 +327,7 @@ export function ResultsScreen({
       </div>
 
       <div className="border-t border-border p-4 bg-background space-y-2">
-        <button
+        {/* <button
           onClick={onRerunWithDifferentMode}
           className="w-full flex items-center justify-center gap-2 py-3 bg-card border border-border text-foreground rounded-lg hover:bg-muted transition-colors active:scale-95"
         >
@@ -339,7 +339,7 @@ export function ResultsScreen({
               : "Custom Trained"}{" "}
             Model
           </span>
-        </button>
+        </button> */}
         <Button
           onClick={onProcessAnother}
           className="w-full bg-gradient-to-r from-[#0EA5E9] to-[#10B981] hover:opacity-90 text-white py-6"

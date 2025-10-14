@@ -1,22 +1,11 @@
-import React, { useState, useEffect } from "react"; // <-- Add React here
-import { motion, AnimatePresence } from "motion/react";
-import {
-  CheckCircle2,
-  XCircle,
-  RotateCcw,
-  Loader2,
-  Cpu,
-  FileText,
-  Sparkles,
-  Cloud,
-  Shield,
-} from "lucide-react";
-import { Progress } from "./ui/progress";
+import React, { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'motion/react';
+import { CheckCircle2, XCircle, RotateCcw, Loader2, Cpu, FileText, Sparkles, Cloud } from 'lucide-react';
+import { Progress } from './ui/progress';
 
 interface ProcessingScreenProps {
   onComplete: (result: ProcessingResult) => void;
   onCancel: () => void;
-  mode: "custom" | "gemini";
 }
 
 export interface ProcessingResult {
@@ -25,39 +14,35 @@ export interface ProcessingResult {
   audioUrl?: string;
 }
 
-export function ProcessingScreen({
-  onComplete,
-  onCancel,
-  mode,
-}: ProcessingScreenProps) {
+export function ProcessingScreen({ onComplete, onCancel }: ProcessingScreenProps) {
   const [currentStep, setCurrentStep] = useState(0);
   const [progress, setProgress] = useState(0);
 
   const steps = [
-    {
-      label: "Audio Analysis",
+    { 
+      label: 'Audio Analysis', 
       icon: Cpu,
-      description: "Analyzing audio quality & distortions",
-      color: "text-secondary",
+      description: 'Analyzing audio quality & distortions',
+      color: 'text-secondary'
     },
-    {
-      label: "Transcription",
+    { 
+      label: 'Transcription', 
       icon: FileText,
-      description: "Converting speech to text",
-      color: "text-primary",
+      description: 'Converting speech to text',
+      color: 'text-secondary'
     },
-    {
-      label: "AI Prediction",
+    { 
+      label: 'AI Prediction', 
       icon: Sparkles,
-      description: "Predicting missing segments",
-      color: "text-accent",
+      description: 'Predicting missing segments',
+      color: 'text-secondary'
     },
   ];
 
   useEffect(() => {
     // Simulate processing steps
     const stepDuration = 2000;
-
+    
     const stepTimer = setInterval(() => {
       setCurrentStep((prev) => {
         if (prev < 2) {
@@ -72,18 +57,16 @@ export function ProcessingScreen({
         if (prev >= 100) {
           clearInterval(progressTimer);
           clearInterval(stepTimer);
-
+          
           // Complete processing after a short delay
           setTimeout(() => {
             onComplete({
-              rawTranscription:
-                "السلام علیکم، میں آج آپ سے [missing] کے بارے میں بات کرنا چاہتا ہوں۔ کیا آپ [missing] کر سکتے ہیں؟ یہ بہت ضروری ہے۔",
-              predictedTranscription:
-                "السلام علیکم، میں آج آپ سے پراجیکٹ کے بارے میں بات کرنا چاہتا ہوں۔ کیا آپ مدد کر سکتے ہیں؟ یہ بہت ضروری ہے۔",
-              audioUrl: undefined,
+              rawTranscription: "السلام علیکم، میں آج آپ سے [missing] کے بارے میں بات کرنا چاہتا ہوں۔ کیا آپ [missing] کر سکتے ہیں؟ یہ بہت ضروری ہے۔",
+              predictedTranscription: "السلام علیکم، میں آج آپ سے پراجیکٹ کے بارے میں بات کرنا چاہتا ہوں۔ کیا آپ مدد کر سکتے ہیں؟ یہ بہت ضروری ہے۔",
+              audioUrl: undefined
             });
           }, 500);
-
+          
           return 100;
         }
         return prev + 2;
@@ -102,26 +85,14 @@ export function ProcessingScreen({
       <div className="px-4 py-3 border-b border-border bg-card/50 backdrop-blur-sm">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <div
-              className={`p-1.5 rounded-lg ${
-                mode === "gemini" ? "bg-secondary/10" : "bg-primary/10"
-              }`}
-            >
-              {mode === "gemini" ? (
-                <Cloud
-                  className={`w-4 h-4 ${
-                    mode === "gemini" ? "text-secondary" : "text-primary"
-                  }`}
-                />
-              ) : (
-                <Shield className="w-4 h-4 text-primary" />
-              )}
+            <div className="p-1.5 rounded-lg bg-secondary/10">
+              <Cloud className="w-4 h-4 text-secondary" />
             </div>
             <div>
               <h2 className="text-sm">Processing Audio</h2>
-              <p className="text-xs text-muted-foreground">
-                {mode === "gemini" ? "Gemini AI" : "Custom Trained"} Model
-              </p>
+              {/* <p className="text-xs text-muted-foreground">
+                Google Gemini AI Model
+              </p> */}
             </div>
           </div>
           <div className="text-xs font-medium text-muted-foreground">
@@ -140,10 +111,7 @@ export function ProcessingScreen({
               <motion.div
                 className="absolute inset-0 w-36 h-36 -m-4 rounded-full"
                 style={{
-                  background:
-                    mode === "gemini"
-                      ? "radial-gradient(circle, rgba(14, 165, 233, 0.1) 0%, transparent 70%)"
-                      : "radial-gradient(circle, rgba(30, 58, 138, 0.1) 0%, transparent 70%)",
+                  background: 'radial-gradient(circle, rgba(14, 165, 233, 0.1) 0%, transparent 70%)'
                 }}
                 animate={{
                   scale: [1, 1.4, 1],
@@ -155,14 +123,11 @@ export function ProcessingScreen({
                   ease: "easeInOut",
                 }}
               />
-
+              
               <motion.div
                 className="absolute inset-0 w-36 h-36 -m-4 rounded-full"
                 style={{
-                  background:
-                    mode === "gemini"
-                      ? "radial-gradient(circle, rgba(14, 165, 233, 0.15) 0%, transparent 70%)"
-                      : "radial-gradient(circle, rgba(30, 58, 138, 0.15) 0%, transparent 70%)",
+                  background: 'radial-gradient(circle, rgba(14, 165, 233, 0.15) 0%, transparent 70%)'
                 }}
                 animate={{
                   scale: [1, 1.2, 1],
@@ -174,17 +139,13 @@ export function ProcessingScreen({
                   ease: "easeInOut",
                 }}
               />
-
+              
               {/* Main Circle */}
               <motion.div
-                className={`relative w-28 h-28 rounded-full flex items-center justify-center shadow-2xl ${
-                  mode === "gemini"
-                    ? "bg-gradient-to-br from-[#0EA5E9] to-[#0284c7]"
-                    : "bg-gradient-to-br from-[#1E3A8A] to-[#1e40af]"
-                }`}
+                className="relative w-28 h-28 rounded-full flex items-center justify-center shadow-2xl bg-gradient-to-br from-[#0EA5E9] to-[#0284c7]"
                 animate={{
                   scale: [1, 1.05, 1],
-                  rotate: [0, 180, 360],
+                  // rotate: [0, 180, 360],
                 }}
                 transition={{
                   scale: {
@@ -196,7 +157,7 @@ export function ProcessingScreen({
                     duration: 10,
                     repeat: Infinity,
                     ease: "linear",
-                  },
+                  }
                 }}
               >
                 {/* Inner Circle with Waveform */}
@@ -215,13 +176,9 @@ export function ProcessingScreen({
                     {[...Array(7)].map((_, i) => (
                       <motion.div
                         key={i}
-                        className={`w-1 rounded-full ${
-                          mode === "gemini"
-                            ? "bg-gradient-to-t from-[#1E3A8A] via-[#0EA5E9] to-[#10B981]"
-                            : "bg-gradient-to-t from-[#1E3A8A] via-[#3b82f6] to-[#60a5fa]"
-                        }`}
+                        className="w-1 rounded-full bg-gradient-to-t from-[#0EA5E9] to-[#0284c7]"
                         animate={{
-                          height: ["15px", "45px", "15px"],
+                          height: ['15px', '45px', '15px'],
                         }}
                         transition={{
                           duration: 1.2,
@@ -236,8 +193,8 @@ export function ProcessingScreen({
 
                 {/* Percentage in center */}
                 <div className="absolute inset-0 flex items-center justify-center">
-                  <motion.span
-                    className="text-[10px] font-medium text-white/0"
+                  <motion.span 
+                    className="text-[10px] font-medium text-white/80"
                     animate={{ opacity: [0, 0.5, 0] }}
                     transition={{ duration: 2, repeat: Infinity }}
                   >
@@ -249,7 +206,7 @@ export function ProcessingScreen({
           </div>
 
           {/* Current Step Info */}
-          <motion.div
+          <motion.div 
             className="text-center space-y-2"
             key={currentStep}
             initial={{ opacity: 0, y: 10 }}
@@ -258,7 +215,7 @@ export function ProcessingScreen({
           >
             <div className="flex items-center justify-center gap-2">
               {React.createElement(steps[currentStep].icon, {
-                className: `w-5 h-5 ${steps[currentStep].color}`,
+                className: `w-5 h-5 ${steps[currentStep].color}`
               })}
               <h3 className="text-foreground">{steps[currentStep].label}</h3>
             </div>
@@ -314,11 +271,12 @@ export function ProcessingScreen({
                       </motion.div>
                     ) : index === currentStep ? (
                       // Active
-                      <motion.div key="active" className="relative">
+                      <motion.div
+                        key="active"
+                        className="relative"
+                      >
                         <motion.div
-                          className={`absolute inset-0 ${
-                            mode === "gemini" ? "bg-secondary" : "bg-primary"
-                          } rounded-full -m-1`}
+                          className="absolute inset-0 bg-secondary rounded-full -m-1"
                           animate={{
                             scale: [1, 1.4, 1.4],
                             opacity: [0.5, 0, 0],
@@ -328,25 +286,15 @@ export function ProcessingScreen({
                             repeat: Infinity,
                           }}
                         />
-                        <motion.div
-                          className={`relative ${
-                            mode === "gemini" ? "bg-secondary" : "bg-primary"
-                          } rounded-full p-2 shadow-lg`}
-                          animate={{
+                        <motion.div 
+                          className="relative bg-secondary rounded-full p-2 shadow-lg"
+                          animate={{ 
                             rotate: 360,
-                            scale: [1, 1.1, 1],
+                            scale: [1, 1.1, 1]
                           }}
-                          transition={{
-                            rotate: {
-                              duration: 2,
-                              repeat: Infinity,
-                              ease: "linear",
-                            },
-                            scale: {
-                              duration: 1,
-                              repeat: Infinity,
-                              ease: "easeInOut",
-                            },
+                          transition={{ 
+                            rotate: { duration: 2, repeat: Infinity, ease: "linear" },
+                            scale: { duration: 1, repeat: Infinity, ease: "easeInOut" }
                           }}
                         >
                           <Loader2 className="w-5 h-5 text-white" />
@@ -363,13 +311,9 @@ export function ProcessingScreen({
                     )}
                   </AnimatePresence>
                 </div>
-                <span
-                  className={`text-[10px] text-center max-w-[70px] leading-tight transition-colors ${
-                    index <= currentStep
-                      ? "text-foreground font-medium"
-                      : "text-muted-foreground"
-                  }`}
-                >
+                <span className={`text-[10px] text-center max-w-[70px] leading-tight transition-colors ${
+                  index <= currentStep ? 'text-foreground font-medium' : 'text-muted-foreground'
+                }`}>
                   {step.label}
                 </span>
               </motion.div>

@@ -9,8 +9,6 @@ interface SettingsScreenProps {
   onBack: () => void;
   darkMode: boolean;
   onDarkModeChange: (enabled: boolean) => void;
-  defaultMode: 'online' | 'offline' | 'ask';
-  onDefaultModeChange: (mode: 'online' | 'offline' | 'ask') => void;
   apiKey: string;
   onApiKeyChange: (key: string) => void;
 }
@@ -19,18 +17,16 @@ export function SettingsScreen({
   onBack, 
   darkMode, 
   onDarkModeChange,
-  defaultMode,
-  onDefaultModeChange,
   apiKey,
   onApiKeyChange
 }: SettingsScreenProps) {
-
   const handleClearCache = () => {
     toast.success('Cache cleared successfully!');
   };
 
   const handleSaveApiKey = () => {
     if (apiKey.trim()) {
+      localStorage.setItem("geminiApiKey", apiKey);
       onApiKeyChange(apiKey);
       toast.success('API key saved successfully!');
     } else {
@@ -86,57 +82,15 @@ export function SettingsScreen({
           </div>
         </div>
 
-        {/* Default Mode */}
-        <div className="bg-card border border-border rounded-xl p-4 space-y-3">
-          <div>
-            <Label>Default Processing Mode</Label>
-            <p className="text-xs text-muted-foreground mb-3">
-              Choose default mode for processing
-            </p>
-          </div>
-          <div className="space-y-2">
-            <button
-              onClick={() => onDefaultModeChange('online')}
-              className={`w-full p-3 rounded-lg border-2 transition-all text-sm ${
-                defaultMode === 'online'
-                  ? 'border-secondary bg-secondary/10 text-secondary'
-                  : 'border-border hover:border-muted-foreground/20'
-              }`}
-            >
-              Online Mode
-            </button>
-            <button
-              onClick={() => onDefaultModeChange('offline')}
-              className={`w-full p-3 rounded-lg border-2 transition-all text-sm ${
-                defaultMode === 'offline'
-                  ? 'border-primary bg-primary/10 text-primary'
-                  : 'border-border hover:border-muted-foreground/20'
-              }`}
-            >
-              Offline Mode
-            </button>
-            <button
-              onClick={() => onDefaultModeChange('ask')}
-              className={`w-full p-3 rounded-lg border-2 transition-all text-sm ${
-                defaultMode === 'ask'
-                  ? 'border-accent bg-accent/10 text-accent'
-                  : 'border-border hover:border-muted-foreground/20'
-              }`}
-            >
-              Ask Always
-            </button>
-          </div>
-        </div>
-
         {/* API Key */}
-        <div className="bg-card border border-border rounded-xl p-4 space-y-3">
+        {/* <div className="bg-card border border-border rounded-xl p-4 space-y-3">
           <div className="flex items-center gap-3">
             <div className="p-2 bg-muted rounded-lg">
               <Key className="w-5 h-5" />
             </div>
             <div>
               <Label htmlFor="api-key">Gemini API Key</Label>
-              <p className="text-xs text-muted-foreground">For online mode</p>
+              <p className="text-xs text-muted-foreground">Required for audio processing</p>
             </div>
           </div>
           <Input
@@ -153,7 +107,7 @@ export function SettingsScreen({
           >
             Save API Key
           </Button>
-        </div>
+        </div> */}
 
         {/* Clear Cache */}
         <div className="bg-card border border-border rounded-xl p-4">
