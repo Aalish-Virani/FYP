@@ -1,5 +1,9 @@
 # Audio Call Transcription with Intelligent Gap Filling
 
+## Demo
+
+[![Demo Short Video](https://img.youtube.com/vi/CKvAdDEQiuI/maxresdefault.jpg)](https://youtube.com/shorts/CKvAdDEQiuI)
+
 ## Overview
 
 This project is a Final Year Project (FYP) developed as part of Bachelors Degree in Computer Systems Engineering at Mehran University of Engineering & Technology, Jamshoro.
